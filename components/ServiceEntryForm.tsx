@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getLastSlipNumber, submitService } from '../services/googleSheetService';
-import type { NewServicePayload } from '../types';
+import type { NewServicePayload, ServiceData } from '../types';
 import Spinner from './Spinner';
 import MultiSelectDropdown from './MultiSelectDropdown';
 
 interface ServiceEntryFormProps {
-    onSuccess: () => void;
+    onSuccess: (newService: ServiceData) => void;
 }
 
 const initialFormData = {
@@ -119,15 +119,28 @@ const ServiceEntryForm: React.FC<ServiceEntryFormProps> = ({ onSuccess }) => {
                 invoiceNumber: '',
             };
 
-            await submitService(payload);
-            alert('Service request submitted successfully!');
+            const response = await submitService(payload);
+            
+            // FIX: Construct ServiceData compatible object by excluding properties from NewServicePayload that are not in ServiceData.
+            // The original code created an object with extra properties ('image', 'imageName', 'imageMimeType'), causing a type error.
+            const { image, imageName, imageMimeType, ...serviceDataFromPayload } = payload;
+            const newServiceData: ServiceData = {
+                ...serviceDataFromPayload,
+                serviceId: response.serviceId,
+                rowIndex: 0, // rowIndex is not available here, but not critical for the slip
+                serviceStatus: 'New',
+                imageUrl: imagePreview || '', // Use preview for immediate display
+                servicemanName: '',
+            };
+            
+            // alert('Service request submitted successfully!'); // Replaced by modal
             (e.target as HTMLFormElement).reset();
             setFormData(initialFormData);
             setSelectedServices([]);
             setImagePreview(null);
             setImageFile(null);
             fetchSlip();
-            onSuccess();
+            onSuccess(newServiceData);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
             setError(`Submission failed: ${errorMessage}`);

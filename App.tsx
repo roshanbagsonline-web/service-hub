@@ -1,9 +1,9 @@
-
 import React, { useState, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import ServiceEntryForm from './components/ServiceEntryForm';
 import ServiceDataTable from './components/ServiceDataTable';
 import UpdateServiceModal from './components/UpdateServiceModal';
+import ServiceSlipModal from './components/ServiceSlipModal';
 import type { ServiceData } from './types';
 
 export type Page = 'entry' | 'data';
@@ -13,6 +13,7 @@ const App: React.FC = () => {
     const [selectedService, setSelectedService] = useState<ServiceData | null>(null);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [refreshDataKey, setRefreshDataKey] = useState(0);
+    const [showSlipFor, setShowSlipFor] = useState<ServiceData | null>(null);
 
     const handleEditService = (service: ServiceData) => {
         setSelectedService(service);
@@ -20,41 +21,48 @@ const App: React.FC = () => {
     };
 
     const handleCloseModal = () => {
-        setIsUpdateModalOpen(false);
         setSelectedService(null);
+        setIsUpdateModalOpen(false);
     };
 
     const handleUpdateSuccess = () => {
         handleCloseModal();
-        setRefreshDataKey(prev => prev + 1); // Trigger data refresh in table
+        setRefreshDataKey(prevKey => prevKey + 1); // Refresh data table
     };
 
-    const handleNewServiceSuccess = () => {
-        setRefreshDataKey(prev => prev + 1); // Trigger data refresh in table
-        setCurrentPage('data'); // Switch to data view after successful entry
+    const handleNewServiceSuccess = (newService: ServiceData) => {
+        setShowSlipFor(newService);
     };
 
-    const navigate = useCallback((page: Page) => {
+    const handleCloseSlipModal = () => {
+        setShowSlipFor(null);
+        setRefreshDataKey(prevKey => prevKey + 1);
+        setCurrentPage('data'); // Navigate to data page after closing slip
+    };
+
+    const navigate = (page: Page) => {
         setCurrentPage(page);
-    }, []);
+    };
 
     return (
-        <div className="flex h-screen bg-slate-100 font-sans">
+        <div className="flex h-screen bg-gray-100 font-sans">
             <Sidebar currentPage={currentPage} navigate={navigate} />
-            <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                <div className={`${currentPage === 'entry' ? 'block' : 'hidden'}`}>
-                    <ServiceEntryForm onSuccess={handleNewServiceSuccess} />
-                </div>
-                <div className={`${currentPage === 'data' ? 'block' : 'hidden'}`}>
-                    <ServiceDataTable onEdit={handleEditService} refreshKey={refreshDataKey} />
-                </div>
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                {currentPage === 'entry' && <ServiceEntryForm onSuccess={handleNewServiceSuccess} />}
+                {currentPage === 'data' && <ServiceDataTable onEdit={handleEditService} refreshKey={refreshDataKey} />}
             </main>
             {isUpdateModalOpen && selectedService && (
                 <UpdateServiceModal
-                    service={selectedService}
                     isOpen={isUpdateModalOpen}
+                    service={selectedService}
                     onClose={handleCloseModal}
                     onSuccess={handleUpdateSuccess}
+                />
+            )}
+            {showSlipFor && (
+                <ServiceSlipModal
+                    service={showSlipFor}
+                    onClose={handleCloseSlipModal}
                 />
             )}
         </div>
