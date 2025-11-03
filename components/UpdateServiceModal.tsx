@@ -24,20 +24,9 @@ const UpdateServiceModal: React.FC<UpdateServiceModalProps> = ({ service, isOpen
 
     useEffect(() => {
         if (service) {
-            // Helper to ensure date strings are in 'YYYY-MM-DD' format for date inputs
-            const normalizeDateForInput = (dateString: string) => {
-                if (!dateString) return '';
-                // Handles both 'YYYY-MM-DD' and 'YYYY-MM-DDTHH:mm:ss.sssZ'
-                return dateString.split('T')[0];
-            };
-            
-            // [FIX] Normalize dates before setting form data to ensure they appear in date inputs
-            const normalizedService = {
-                ...service,
-                date: normalizeDateForInput(service.date),
-                warrantyDate: normalizeDateForInput(service.warrantyDate),
-            };
-            setFormData(normalizedService);
+            // The `service` prop now has pre-normalized dates from ServiceDataTable.
+            // We can use the data directly without further processing.
+            setFormData(service);
 
             const directUrl = getDirectGoogleDriveImageUrl(service.imageUrl);
             setImagePreview(directUrl);
@@ -232,8 +221,9 @@ const InputField: React.FC<{
     value: string, 
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, 
     type?: string,
-    disabled?: boolean
-}> = ({label, name, value, onChange, type = 'text', disabled = false}) => (
+    disabled?: boolean,
+    placeholder?: string,
+}> = ({label, name, value, onChange, type = 'text', disabled = false, placeholder = ''}) => (
     <div>
         <label className="block text-sm font-medium text-gray-700">{label}</label>
         <input 
@@ -242,6 +232,7 @@ const InputField: React.FC<{
             value={value || ''} 
             onChange={onChange} 
             disabled={disabled}
+            placeholder={placeholder}
             className={`mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
         />
     </div>

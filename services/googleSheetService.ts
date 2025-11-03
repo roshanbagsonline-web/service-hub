@@ -8,7 +8,7 @@ import type { NewServicePayload, UpdateServicePayload, ServiceData } from '../ty
 // 3. Set "Who has access" to "Anyone".
 // 4. Click "Deploy" and copy the "Deployment ID" (URL) here.
 // ===================================================================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH7tjqz470aLSt74zjvmiJGWySx3OEkX-N-Cbg65RhEcpONwFW6AKAcqI3kuGPRXPSfQ/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDHRcCXcJLeF_2OMk5Pcuf_NNwXRlnPXOZCVpS7zVwN6saQr_QLzJ2VzO9FczJSuJB2w/exec";
 
 async function apiRequest<T,>(action: string, method: 'GET' | 'POST' = 'GET', payload?: object): Promise<T> {
     const url = new URL(SCRIPT_URL);

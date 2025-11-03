@@ -8,14 +8,24 @@ import { getDirectGoogleDriveImageUrl } from '../utils/imageUtils';
 
 interface ServiceDataTableProps {
     onEdit: (service: ServiceData) => void;
+    onDownload: (service: ServiceData) => void;
     refreshKey: number;
 }
 
-// Helper function to format date consistently for display
-const formatDateForDisplay = (dateString: string): string => {
-    if (!dateString) return '';
-    // Consistently return YYYY-MM-DD for display
-    return dateString.split('T')[0];
+/**
+ * A simple validation function for date strings.
+ * The backend now provides dates in YYYY-MM-DD format, so we just check for that.
+ * @param dateInput The raw date value from the data source.
+ * @returns A string in 'YYYY-MM-DD' format, or an empty string if invalid.
+ */
+const normalizeDateString = (dateInput: any): string => {
+    if (!dateInput) return '';
+    const dateStr = String(dateInput).trim();
+    // A simple regex check is enough for validation.
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+        return dateStr.substring(0, 10);
+    }
+    return ''; // Return empty if format is unexpected
 };
 
 
@@ -37,7 +47,7 @@ const getStatusColor = (status: string): string => {
     }
 }
 
-const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, refreshKey }) => {
+const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, onDownload, refreshKey }) => {
     const [services, setServices] = useState<ServiceData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -55,9 +65,18 @@ const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, refreshKey 
             setError(null);
             try {
                 const data = await getAllServices();
-                // Filter out any potential header row or invalid data
-                const cleanData = data.filter(row => row.slipNo && !isNaN(parseInt(String(row.slipNo), 10)));
-                setServices(cleanData);
+                // FIX: Add a more robust filter to explicitly remove the header row.
+                // The header might be passed from the script if it's not deployed correctly.
+                // This filter ensures that only rows with a numeric slip number are processed.
+                const processedData = data
+                    .filter(row => row && row.slipNo && !isNaN(parseInt(String(row.slipNo), 10)))
+                    .map(service => ({
+                        ...service,
+                        // Normalize function now just validates the expected format
+                        date: normalizeDateString(service.date),
+                        warrantyDate: normalizeDateString(service.warrantyDate),
+                    }));
+                setServices(processedData);
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
                 setError(`Failed to fetch services: ${errorMessage}`);
@@ -80,16 +99,9 @@ const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, refreshKey 
         if (startDate || endDate) {
             filteredData = filteredData.filter(s => {
                 if (!s.date) return false;
-                
-                // [FIX] Truncate potential datetime strings to just the date part for accurate comparison
-                const serviceDateStr = s.date.split('T')[0];
-
-                if (startDate && serviceDateStr < startDate) {
-                    return false;
-                }
-                if (endDate && serviceDateStr > endDate) {
-                    return false;
-                }
+                const serviceDateStr = s.date;
+                if (startDate && serviceDateStr < startDate) return false;
+                if (endDate && serviceDateStr > endDate) return false;
                 return true;
             });
         }
@@ -116,9 +128,6 @@ const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, refreshKey 
                 let comparison = 0;
                 if (sortConfig.key === 'slipNo' || sortConfig.key === 'estimateAmount') {
                     comparison = parseInt(String(aVal) || '0', 10) - parseInt(String(bVal) || '0', 10);
-                } else if (sortConfig.key === 'date' || sortConfig.key === 'warrantyDate') {
-                    // Use string compare for dates since they are YYYY-MM-DD
-                    comparison = String(aVal).localeCompare(String(bVal));
                 } else {
                     comparison = String(aVal).toLowerCase().localeCompare(String(bVal).toLowerCase());
                 }
@@ -245,7 +254,7 @@ const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, refreshKey 
                                     />
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{service.slipNo}</td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{formatDateForDisplay(service.date)}</td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{service.date}</td>
                                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
                                     <div className="font-medium">{service.customerName}</div>
                                     <div>{service.contact}</div>
@@ -261,10 +270,15 @@ const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, refreshKey 
                                         {service.serviceStatus}
                                     </span>
                                 </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                    <button onClick={() => onEdit(service)} className="text-purple-600 hover:text-purple-900 flex items-center">
-                                        Edit <i className="fas fa-pencil-alt ml-1"></i>
-                                    </button>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div className="flex items-center space-x-4">
+                                        <button onClick={() => onEdit(service)} className="text-purple-600 hover:text-purple-900 flex items-center" title="Edit service">
+                                            <i className="fas fa-pencil-alt"></i>
+                                        </button>
+                                        <button onClick={() => onDownload(service)} className="text-green-600 hover:text-green-900 flex items-center" title="Download Slip">
+                                            <i className="fas fa-download"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
