@@ -1,6 +1,5 @@
 import React, { forwardRef } from 'react';
 import type { ServiceData } from '../types';
-import { logoBase64 } from '../assets/logo';
 
 interface PrintableSlipProps {
     service: ServiceData;
@@ -43,15 +42,21 @@ const PrintableSlip = forwardRef<HTMLDivElement, PrintableSlipProps>(({ service 
                 }
             `}</style>
 
-            <header className="flex justify-between items-center pb-6 mb-6 border-b border-gray-200 print-no-break">
-                <div className="w-1/4">
-                    <img src={logoBase64} alt="Company Logo" className="w-48 h-auto" />
+            <header className="flex justify-between items-start pb-6 mb-6 border-b border-gray-200 print-no-break">
+                <div className="flex items-center space-x-4">
+                    <div className="flex-shrink-0 bg-purple-600 p-4 rounded-lg shadow-md">
+                        <i className="fas fa-tools text-white text-3xl fa-fw"></i>
+                    </div>
+                    <div>
+                        <h2 className="font-extrabold text-4xl text-gray-800">Roshan Bags</h2>
+                        <p className="text-lg text-gray-500">Service Department</p>
+                    </div>
                 </div>
-                <div className="w-3/4 text-right">
-                    <h2 className="font-extrabold text-4xl text-gray-800 mb-2">Roshan Bags</h2>
-                    <p className="text-sm text-gray-600">33, SOUTH USMAN ROAD, NEAR BUS TERMINUS, T.NAGAR, CHENNAI-600017</p>
-                    <p className="text-sm text-gray-600">Ph: 9345735945 | E-Mail: sales@roshanbags.com</p>
-                    <p className="text-sm font-semibold text-gray-600 mt-1">GST: 33AAIFR7046M1ZT</p>
+                <div className="text-right text-sm text-gray-600">
+                    <p>33, SOUTH USMAN ROAD, NEAR BUS TERMINUS, T.NAGAR</p>
+                    <p>CHENNAI-600017</p>
+                    <p className="mt-2">Ph: 9345735945 | E-Mail: sales@roshanbags.com</p>
+                    <p className="font-semibold text-gray-700 mt-2">GST: 33AAIFR7046M1ZT</p>
                 </div>
             </header>
 

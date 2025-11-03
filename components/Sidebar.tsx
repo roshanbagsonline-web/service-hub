@@ -1,7 +1,5 @@
-
 import React from 'react';
 import type { Page } from '../App';
-import { logoBase64 } from '../assets/logo';
 
 interface SidebarProps {
     currentPage: Page;
@@ -57,7 +55,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, navigate, isOpen, setIsO
             
             <aside className={`fixed inset-y-0 left-0 z-40 w-64 h-full bg-gradient-to-b from-purple-800 to-indigo-900 shadow-lg text-white flex flex-col transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="flex items-center justify-between px-6 py-4 border-b border-purple-700">
-                    <img src={logoBase64} alt="Roshan Company Logo" className="w-full h-auto" />
+                    <div className="flex items-center space-x-3">
+                        <div className="bg-purple-600 p-2 rounded-lg">
+                            <i className="fas fa-tools text-white text-xl fa-fw"></i>
+                        </div>
+                        <span className="text-xl font-bold text-white">Roshan Bags</span>
+                    </div>
                     <button onClick={() => setIsOpen(false)} className="text-purple-100 hover:text-white md:hidden" aria-label="Close sidebar">
                          <i className="fas fa-times fa-lg"></i>
                     </button>

@@ -54,6 +54,7 @@ const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, onDownload,
     const [searchTerm, setSearchTerm] = useState('');
     const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState('All');
+    const [servicemanFilter, setServicemanFilter] = useState('All');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [sortConfig, setSortConfig] = useState<{ key: keyof ServiceData | null; direction: 'ascending' | 'descending' }>({ key: 'date', direction: 'descending' });
@@ -87,12 +88,22 @@ const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, onDownload,
         fetchServices();
     }, [refreshKey]);
 
+    const servicemen = useMemo(() => {
+        const names = new Set(services.map(s => s.servicemanName).filter(name => name && name.trim() !== ''));
+        return ['All', ...Array.from(names).sort()];
+    }, [services]);
+
     const sortedAndFilteredServices = useMemo(() => {
         let filteredData = [...services];
 
         // Status filter
         if (statusFilter !== 'All') {
             filteredData = filteredData.filter(s => s.serviceStatus === statusFilter);
+        }
+        
+        // Serviceman filter
+        if (servicemanFilter !== 'All') {
+            filteredData = filteredData.filter(s => s.servicemanName === servicemanFilter);
         }
 
         // Date range filter
@@ -137,7 +148,7 @@ const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, onDownload,
         }
 
         return filteredData;
-    }, [services, searchTerm, statusFilter, startDate, endDate, sortConfig]);
+    }, [services, searchTerm, statusFilter, servicemanFilter, startDate, endDate, sortConfig]);
 
     const requestSort = (key: keyof ServiceData) => {
         let direction: 'ascending' | 'descending' = 'ascending';
@@ -180,7 +191,7 @@ const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, onDownload,
     return (
         <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-lg">
             <h2 className="text-3xl font-bold text-gray-800 mb-6">Service Data</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
                 <input
                     type="text"
                     placeholder="Search all fields..."
@@ -196,6 +207,15 @@ const ServiceDataTable: React.FC<ServiceDataTableProps> = ({ onEdit, onDownload,
                     <option value="All">All Statuses</option>
                     {Object.values(ServiceStatus).map(status => (
                         <option key={status} value={status}>{status}</option>
+                    ))}
+                </select>
+                <select
+                    value={servicemanFilter}
+                    onChange={e => setServicemanFilter(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 bg-white"
+                >
+                    {servicemen.map(name => (
+                         <option key={name} value={name}>{name === 'All' ? 'All Servicemen' : name}</option>
                     ))}
                 </select>
                 <div className="grid grid-cols-2 gap-2">
